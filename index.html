@@ -3,208 +3,252 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Mapidex web shell</title>
+<title>Mapidex — Playdate mirror</title>
 <style>
-  :root {
-    --bg: #e8e6df;
-    --ink: #111;
-    --muted: #5a5a5a;
-    --device: #222;
-    --screen-bg: #c5c8b4;
-    --px: #12120e;
+  /* Playdate Simulator-faithful mirror */
+  @font-face {
+    font-family: "PD";
+    src: local("Courier New"), local("Menlo");
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-    background: var(--bg);
-    color: var(--ink);
+    background: #3a3a3a;
+    color: #ddd;
+    font-family: ui-monospace, Menlo, monospace;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 24px 16px 48px;
-    gap: 16px;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px 12px;
   }
-  header { width: min(520px, 100%); }
-  header h1 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
-  header p { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
-  .device {
-    background: var(--device);
-    border-radius: 22px;
-    padding: 14px 14px 20px;
-    box-shadow: 0 16px 36px rgba(0,0,0,.2);
-    position: relative;
+  .label {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    max-width: 420px;
+    line-height: 1.35;
   }
-  .bezel { background: #0a0a0a; border-radius: 6px; padding: 6px; }
-  /* Hard Playdate stage: layout math is always 400x240. Scale visually with zoom. */
-  .stage-wrap {
-    width: 400px;
-    height: 240px;
-    transform-origin: top left;
+  /* Yellow Playdate body (approx Simulator look) */
+  .pd {
+    background: #ffc83d;
+    border-radius: 28px;
+    padding: 22px 22px 18px;
+    box-shadow: 0 12px 0 #c99200, 0 18px 40px rgba(0,0,0,.45);
+    width: 444px; /* 400 + bezels */
   }
-  #stage {
-    width: 400px;
-    height: 240px;
-    background: var(--screen-bg);
-    color: var(--px);
-    position: relative;
-    overflow: hidden;
-    image-rendering: pixelated;
-    font-family: ui-monospace, Menlo, monospace;
-    outline: none;
-  }
-  @media (min-width: 860px) {
-    .stage-wrap { transform: scale(2); margin-bottom: 240px; }
-  }
-  .hw {
+  .pd-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 12px;
+    margin-bottom: 10px;
     padding: 0 4px;
   }
-  .crank-btn {
-    width: 42px; height: 42px; border-radius: 50%;
-    border: 2px solid #666; background: #333; color: #bbb;
-    cursor: pointer; font-size: 14px;
-  }
-  .ab { display: flex; gap: 10px; }
-  .ab button {
-    width: 40px; height: 40px; border-radius: 50%;
-    border: 2px solid #777; background: #2c2c2c; color: #ddd;
-    cursor: pointer; font-size: 12px; font-weight: 700;
-  }
-  .ab button:active, .crank-btn:active { background: #555; }
-  .toolbar {
-    display: flex; flex-wrap: wrap; gap: 8px;
-    width: min(520px, 100%); justify-content: center;
-  }
-  .toolbar button, .jumps button {
-    font: inherit; font-size: 12px;
-    border: 1.5px solid #222; background: #fff; padding: 7px 10px;
-    border-radius: 8px; cursor: pointer;
-  }
-  .toolbar button.primary { background: #111; color: #eee; }
-  .jumps { display: flex; flex-wrap: wrap; gap: 6px; width: min(520px, 100%); justify-content: center; }
-  .note { font-size: 11px; color: var(--muted); width: min(520px, 100%); text-align: center; min-height: 2.5em; }
-
-  /* ---- screen chrome ---- */
-  .pad { padding: 8px; height: 100%; display: flex; flex-direction: column; }
-  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .tiny { font-size: 10px; line-height: 1.2; letter-spacing: 0.02em; }
-  .hero { font-size: 14px; font-weight: 700; line-height: 1.2; margin-top: 6px; }
-  /* ~36 chars at 11px across ~384px usable */
-  .body11 { font-size: 11px; line-height: 1.25; }
-  .title20 { font-size: 20px; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; }
-  .muted { opacity: 0.7; }
-  .badge {
-    border: 1.5px solid var(--px);
-    padding: 1px 5px;
-    font-size: 9px;
+  .pd-logo {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #5a3a00;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
   }
-  .list { list-style: none; margin-top: 10px; }
+  .menu-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #5a3a00; opacity: .35;
+  }
+  .lcd-bezel {
+    background: #1a1a1a;
+    border-radius: 6px;
+    padding: 8px;
+  }
+  /* HARD stage: layout math always 400x240. Shown at 1x inside yellow body. */
+  #lcd {
+    width: 400px;
+    height: 240px;
+    background: #b0b090; /* unlit LCD tint when empty — content draws B/W */
+    color: #000;
+    position: relative;
+    overflow: hidden;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    font-smooth: never;
+    font-family: "PD", "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1.2;
+    outline: none;
+    /* force chunky feel */
+    letter-spacing: 0;
+  }
+  #lcd.lit { background: #c8cbb0; }
+  .pd-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding: 0 8px 2px;
+  }
+  .dpad {
+    width: 54px; height: 54px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    opacity: .85;
+  }
+  .crank-hw {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 3px solid #8a6a10;
+    background: #ffe08a;
+    color: #5a3a00;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .ab-hw { display: flex; gap: 12px; }
+  .ab-hw button {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 0; background: #2a2a2a; color: #eee;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .ab-hw button:active, .crank-hw:active { filter: brightness(1.2); }
+
+  /* Outside controls — NOT on the LCD */
+  .ext {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .ext button {
+    font: inherit; font-size: 12px;
+    background: #222; color: #eee;
+    border: 1px solid #555; border-radius: 6px;
+    padding: 8px 12px; cursor: pointer;
+  }
+  .ext button.pri { background: #eee; color: #111; border-color: #eee; }
+  .note {
+    font-size: 11px; color: #888; text-align: center; min-height: 1.4em;
+  }
+
+  /* ===== LCD content: 1-bit only ===== */
+  .pad { padding: 8px; height: 100%; display: flex; flex-direction: column; background: #c8cbb0; color: #000; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+  .t10 { font-size: 10px; }
+  .t11 { font-size: 11px; }
+  .t14 { font-size: 14px; font-weight: 700; }
+  .t20 { font-size: 20px; font-weight: 700; }
+  .inv { background: #000; color: #c8cbb0; }
+  .badge {
+    border: 2px solid #000; padding: 0 4px; font-size: 9px;
+    text-transform: uppercase;
+  }
+  .list { list-style: none; margin-top: 8px; }
   .list li {
-    font-size: 11px; padding: 5px 6px;
-    border: 1.5px solid transparent;
+    padding: 4px 4px; font-size: 11px;
     display: flex; justify-content: space-between;
   }
-  .list li.on { border-color: var(--px); background: var(--px); color: var(--screen-bg); }
-  .dots { display: flex; gap: 3px; margin-top: 6px; }
-  .dots i {
-    width: 4px; height: 4px; border-radius: 50%;
-    border: 1.5px solid var(--px); display: block;
-  }
-  .dots i.on { background: var(--px); }
+  .list li.on { background: #000; color: #c8cbb0; }
   .grow { flex: 1; }
+  .center { flex: 1; display: grid; place-items: center; text-align: center; }
+  .dots { display: flex; gap: 3px; margin-top: 6px; flex-wrap: wrap; }
+  .dots i {
+    width: 4px; height: 4px; border: 2px solid #000; display: block;
+  }
+  .dots i.on { background: #000; }
   .path-band {
     display: grid;
-    grid-template-columns: 1fr 150px;
-    gap: 8px;
+    grid-template-columns: 1fr 148px;
+    gap: 6px;
     flex: 1;
     min-height: 0;
   }
-  .path-copy { display: flex; flex-direction: column; min-width: 0; }
+  .path-copy { min-width: 0; display: flex; flex-direction: column; }
   .path-art {
-    border: 1.5px solid var(--px);
-    background:
-      repeating-linear-gradient(0deg, transparent 0 7px, rgba(18,18,14,.25) 7px 8px),
-      repeating-linear-gradient(90deg, transparent 0 7px, rgba(18,18,14,.15) 7px 8px);
+    border: 2px solid #000;
+    background: #c8cbb0;
     position: relative;
+    /* dither grid */
+    background-image:
+      linear-gradient(#000 1px, transparent 1px),
+      linear-gradient(90deg, #000 1px, transparent 1px);
+    background-size: 8px 8px;
+    background-position: -1px -1px;
+    opacity: 1;
   }
-  .path-art::after {
+  .path-art::before {
     content: "";
-    position: absolute; left: 10%; right: 10%; top: 45%;
-    height: 2px; background: var(--px);
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0 3px,
+      rgba(0,0,0,.08) 3px 4px
+    );
   }
-  .path-art .dot {
-    position: absolute; width: 6px; height: 6px;
-    background: var(--px); border-radius: 50%;
-    left: 18%; top: calc(45% - 2px);
+  .path-line {
+    position: absolute; left: 8%; right: 8%; top: 48%;
+    height: 2px; background: #000; z-index: 1;
+  }
+  .path-dot {
+    position: absolute; width: 6px; height: 6px; background: #000;
+    left: 16%; top: calc(48% - 2px); z-index: 2;
   }
   .actions {
     display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;
   }
   .actions span {
-    border: 1.5px solid var(--px);
-    text-align: center; font-size: 10px; padding: 5px 4px;
+    border: 2px solid #000; text-align: center;
+    font-size: 10px; padding: 4px 2px;
   }
-  .actions span.heavy { background: var(--px); color: var(--screen-bg); }
+  .actions span.heavy { background: #000; color: #c8cbb0; }
   .card-img {
-    height: 112px; border: 1.5px solid var(--px);
-    display: grid; place-items: center;
-    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase;
+    height: 112px; border: 2px solid #000;
+    display: grid; place-items: center; font-size: 9px;
+    text-transform: uppercase;
     background:
-      repeating-linear-gradient(45deg, var(--px) 0 1px, transparent 1px 5px),
-      #a8ab98;
+      repeating-linear-gradient(45deg, #000 0 1px, transparent 1px 4px),
+      #c8cbb0;
   }
-  .center { flex: 1; display: grid; place-items: center; text-align: center; }
-  .saved li { font-size: 11px; padding: 5px 0; border-bottom: 1px solid rgba(0,0,0,.25); list-style: none; }
+  .saved li { list-style: none; font-size: 11px; padding: 4px 0; border-bottom: 2px solid #000; }
   .saved li:last-child { border: 0; }
-  .empty { font-size: 11px; opacity: .6; text-align: center; margin-top: 28px; }
+  .empty { text-align: center; margin-top: 36px; font-size: 11px; }
+  .hero {
+    font-size: 14px; font-weight: 700; line-height: 1.15;
+    margin-top: 4px;
+    /* clamp to ~2 lines in the band */
+    max-height: 34px; overflow: hidden;
+  }
+  .line1 { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>Mapidex web shell</h1>
-    <p>Hard 400x240 Playdate frame (2x on wide screens). A/B only + discrete crank. ASCII copy. Overflow judgments happen inside the box.</p>
-  </header>
+  <p class="label">Mapidex web mirror — LCD is exactly 400x240. Judgments only inside the screen. A/B + discrete crank.</p>
 
-  <div class="device">
-    <div class="bezel">
-      <div class="stage-wrap">
-        <div id="stage" tabindex="0" aria-label="Playdate screen"></div>
-      </div>
+  <div class="pd">
+    <div class="pd-top">
+      <span class="pd-logo">playdate</span>
+      <span class="menu-dot" title="menu"></span>
     </div>
-    <div class="hw">
-      <button type="button" class="crank-btn" id="crank" title="Crank tick">CR</button>
-      <div class="ab">
+    <div class="lcd-bezel">
+      <div id="lcd" class="lit" tabindex="0" aria-label="Playdate LCD 400x240"></div>
+    </div>
+    <div class="pd-bottom">
+      <div class="dpad" title="d-pad"></div>
+      <button type="button" class="crank-hw" id="crank" title="crank tick">CR</button>
+      <div class="ab-hw">
         <button type="button" id="btnB">B</button>
         <button type="button" id="btnA">A</button>
       </div>
     </div>
   </div>
 
-  <div class="toolbar">
+  <div class="ext">
     <button type="button" id="tickPrev">crank -</button>
     <button type="button" id="tickNext">crank +</button>
-    <button type="button" class="primary" id="doA">A primary</button>
-    <button type="button" id="doB">B secondary</button>
-  </div>
-  <div class="jumps">
-    <button type="button" data-go="splash">splash</button>
-    <button type="button" data-go="start">start</button>
-    <button type="button" data-go="loading">loading</button>
-    <button type="button" data-go="path">path</button>
-    <button type="button" data-go="ask">ask</button>
-    <button type="button" data-go="saved">saved</button>
+    <button type="button" class="pri" id="doA">A</button>
+    <button type="button" id="doB">B</button>
   </div>
   <p class="note" id="note"></p>
 
 <script>
 const CATEGORIES = ["relax", "play", "social", "essentials"];
-
 function ascii(s) {
   return String(s || "")
     .replace(/[·•]/g, "-")
@@ -213,23 +257,22 @@ function ascii(s) {
     .replace(/…/g, "...")
     .replace(/[^\x20-\x7E]/g, "");
 }
-
 let FEED = {
   gist: "foot - 0.9 mi - 4 min",
   summary: "Founders Inc -> Greenwich",
   turns: [
-    "Head out  118 ft",
-    "Turn right  197 ft",
-    "Turn left onto Market  0.2 mi",
-    "Turn right onto Polk  0.3 mi",
-    "Continue on Van Ness  0.4 mi",
-    "Turn left onto Greenwich  284 ft",
-    "Arrive  2143 Greenwich"
+    "Head out - 118 ft",
+    "Turn right - 197 ft",
+    "Turn right - 0.1 mi",
+    "Turn Left onto Buchanan - 482 ft",
+    "Turn Right onto North Point - 0.2 mi",
+    "Left onto Fillmore - 0.3 mi",
+    "Left onto Greenwich - 284 ft",
+    "Arrive - destination"
   ],
-  places: ["Mel's Drive-In", "Naked Fish", "Mamacita"],
+  places: ["Mel's Drive-in", "Naked Fish Sushi", "Mamacita"],
   placesByCat: null
 };
-
 const ASK = {
   title: "Golden Gate Bridge",
   layers: [
@@ -238,50 +281,35 @@ const ASK = {
     "1.7 mi / International Orange"
   ]
 };
-
 const state = {
-  screen: "splash",
-  cat: 2,
-  stop: 0,
-  layer: 0,
-  saved: JSON.parse(localStorage.getItem("mapidex_saved_v2") || "[]")
+  screen: "splash", cat: 2, stop: 0, layer: 0,
+  saved: JSON.parse(localStorage.getItem("mapidex_saved_v3") || "[]")
 };
-
 function placesForCat() {
   const key = CATEGORIES[state.cat];
   if (FEED.placesByCat && FEED.placesByCat[key]) return FEED.placesByCat[key];
   return FEED.places;
 }
-
 function stops() {
   return [
     ...FEED.turns.map(t => ({ kind: "turn", text: t })),
     ...placesForCat().map(p => ({ kind: "place", text: p }))
   ];
 }
-
-function note(msg) { document.getElementById("note").textContent = msg; }
-
+function note(m) { document.getElementById("note").textContent = m; }
 function dots(n, i) {
   return `<div class="dots">${Array.from({length:n},(_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div>`;
 }
-
 function go(s) {
   state.screen = s;
   if (s === "path") state.stop = 0;
   if (s === "ask") state.layer = 0;
-  if (s === "loading") {
-    render();
-    setTimeout(() => go("path"), 1200);
-    return;
-  }
+  if (s === "loading") { render(); setTimeout(() => go("path"), 1100); return; }
   render();
 }
-
 function tick(d) {
-  if (state.screen === "start") {
-    state.cat = (state.cat + d + CATEGORIES.length) % CATEGORIES.length;
-  } else if (state.screen === "path") {
+  if (state.screen === "start") state.cat = (state.cat + d + 4) % 4;
+  else if (state.screen === "path") {
     const n = stops().length;
     state.stop = Math.max(0, Math.min(n - 1, state.stop + d));
   } else if (state.screen === "ask") {
@@ -289,7 +317,6 @@ function tick(d) {
   }
   render();
 }
-
 function pressA() {
   if (state.screen === "splash") return go("start");
   if (state.screen === "start") return go("loading");
@@ -297,116 +324,94 @@ function pressA() {
   if (state.screen === "ask") return go("path");
   if (state.screen === "saved") return go("path");
 }
-
 function pressB() {
   if (state.screen === "start") return go("saved");
   if (state.screen === "path") return capture();
   if (state.screen === "ask") return go("path");
   if (state.screen === "saved") return go("start");
 }
-
 function capture() {
-  const entry = {
-    id: "gg-bridge",
-    title: ASK.title,
-    category: CATEGORIES[state.cat],
+  state.saved = [{
+    id: "gg-bridge", title: ASK.title, category: CATEGORIES[state.cat],
     at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  };
-  state.saved = [entry, ...state.saved.filter(x => x.id !== entry.id)];
-  localStorage.setItem("mapidex_saved_v2", JSON.stringify(state.saved));
+  }, ...state.saved.filter(x => x.id !== "gg-bridge")];
+  localStorage.setItem("mapidex_saved_v3", JSON.stringify(state.saved));
   go("saved");
 }
-
 function render() {
-  const el = document.getElementById("stage");
+  const el = document.getElementById("lcd");
   let html = "";
-
   if (state.screen === "splash") {
-    html = `<div class="pad">
-      <div class="grow center"><div>
-        <div class="title20">MaPeDex</div>
-        <p class="tiny muted" style="margin-top:8px">commute detours / catch what you pass</p>
-      </div></div>
-      <div class="row tiny"><span></span><span>A start</span></div>
-    </div>`;
-    note("Splash. A = start. Hard 400x240 stage.");
+    html = `<div class="pad"><div class="center"><div>
+      <div class="t20">MaPeDex</div>
+      <p class="t10" style="margin-top:8px">commute / catch</p>
+    </div></div>
+    <div class="row t10"><span></span><span>A start</span></div></div>`;
+    note("400x240 LCD. Splash.");
   }
-
   if (state.screen === "start") {
     html = `<div class="pad">
-      <div class="row"><span class="tiny muted">pick a detour</span><span class="badge">at work</span></div>
-      <ul class="list">
-        ${CATEGORIES.map((c,i)=>`<li class="${i===state.cat?"on":""}"><span>${c}</span><span>${i===state.cat?"<":""}</span></li>`).join("")}
-      </ul>
+      <div class="row"><span class="t10">pick a detour</span><span class="badge">at work</span></div>
+      <ul class="list">${CATEGORIES.map((c,i)=>
+        `<li class="${i===state.cat?"on":""}"><span>${c}</span><span>${i===state.cat?"<":""}</span></li>`).join("")}</ul>
       <div class="grow"></div>
-      <div class="row tiny"><span>crank / d-pad</span><span>A go  B saved</span></div>
+      <div class="row t10"><span>crank</span><span>A go  B saved</span></div>
     </div>`;
-    note("Start: quiet at-work badge. Crank picks category. A commits once.");
+    note("Start. Badge is context only.");
   }
-
   if (state.screen === "loading") {
     html = `<div class="pad"><div class="center"><div>
-      <div class="hero">Building path...</div>
-      <p class="tiny muted" style="margin-top:8px">${FEED.summary}</p>
-      <p class="tiny muted">${CATEGORIES[state.cat]}</p>
+      <div class="t14">Building path...</div>
+      <p class="t10" style="margin-top:8px">${FEED.summary}</p>
     </div></div></div>`;
-    note("Loading. Real copy from last_feed.json when available.");
+    note("Loading.");
   }
-
   if (state.screen === "path") {
     const all = stops();
     const s = all[state.stop];
-    const kind = s.kind === "turn" ? "turn" : "place";
-    const gistLine = `${CATEGORIES[state.cat]}  ${FEED.gist}`;
+    // 3 lines ONLY: (1) category + gist  (2) hero stop  (3) dots
+    const line1 = `${CATEGORIES[state.cat]}  ${FEED.gist}`;
     html = `<div class="pad">
       <div class="path-band">
         <div class="path-copy">
-          <div class="row tiny"><span>${gistLine}</span></div>
+          <div class="line1">${line1}</div>
           <div class="hero">${s.text}</div>
-          <p class="tiny muted" style="margin-top:4px">${kind}</p>
           ${dots(all.length, state.stop)}
         </div>
-        <div class="path-art" aria-hidden="true"><span class="dot"></span></div>
+        <div class="path-art"><div class="path-line"></div><div class="path-dot"></div></div>
       </div>
       <div class="actions">
         <span>A Ask</span>
         <span class="heavy">B Capture</span>
       </div>
     </div>`;
-    note(`Path 3-line band. Stop ${state.stop+1}/${all.length} (${kind}). A=Ask B=Capture. Gist chars: ${gistLine.length}`);
+    note(`Path 3-line band. ${state.stop+1}/${all.length} ${s.kind}. line1=${line1.length}c`);
   }
-
   if (state.screen === "ask") {
     html = `<div class="pad" style="padding-top:6px">
       <div class="card-img">entry.pdi</div>
-      <div class="hero" style="font-size:13px;margin-top:6px">${ASK.title}</div>
-      <p class="body11" style="margin-top:4px">${ASK.layers[state.layer]}</p>
+      <div class="t14" style="margin-top:6px">${ASK.title}</div>
+      <p class="t11" style="margin-top:4px">${ASK.layers[state.layer]}</p>
       ${dots(ASK.layers.length, state.layer)}
       <div class="grow"></div>
-      <div class="row tiny"><span>crank facts</span><span>B back</span></div>
+      <div class="row t10"><span>crank</span><span>B back</span></div>
     </div>`;
-    note(`Ask card / Pokedex mode. Layer ${state.layer+1}/${ASK.layers.length}.`);
+    note(`Ask card. layer ${state.layer+1}/${ASK.layers.length}`);
   }
-
   if (state.screen === "saved") {
     html = `<div class="pad">
-      <div class="hero" style="font-size:13px">Saved</div>
-      <p class="tiny muted">caught on this walk</p>
+      <div class="t14">Saved</div>
       ${state.saved.length === 0
         ? `<p class="empty">nothing caught yet</p>`
         : `<ul class="saved" style="margin-top:8px">${state.saved.map(s=>
-            `<li><strong>${s.title}</strong><br/><span class="tiny muted">${s.category} / ${s.at}</span></li>`).join("")}</ul>`}
+            `<li>${s.title}<br/><span class="t10">${s.category} / ${s.at}</span></li>`).join("")}</ul>`}
       <div class="grow"></div>
-      <div class="row tiny"><span></span><span>A/B back</span></div>
+      <div class="row t10"><span></span><span>A/B back</span></div>
     </div>`;
-    note(`Saved = name + category. ${state.saved.length} item(s).`);
+    note(`Saved ${state.saved.length}`);
   }
-
   el.innerHTML = html;
-  document.getElementById("crank").style.transform =
-    `rotate(${(state.stop + state.layer + state.cat) * 28}deg)`;
 }
-
 document.getElementById("btnA").onclick = pressA;
 document.getElementById("btnB").onclick = pressB;
 document.getElementById("doA").onclick = pressA;
@@ -414,17 +419,14 @@ document.getElementById("doB").onclick = pressB;
 document.getElementById("crank").onclick = () => tick(1);
 document.getElementById("tickPrev").onclick = () => tick(-1);
 document.getElementById("tickNext").onclick = () => tick(1);
-document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
-
-const stage = document.getElementById("stage");
-stage.addEventListener("wheel", e => { e.preventDefault(); tick(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+const lcd = document.getElementById("lcd");
+lcd.addEventListener("wheel", e => { e.preventDefault(); tick(e.deltaY > 0 ? 1 : -1); }, { passive: false });
 window.addEventListener("keydown", e => {
   if (["ArrowDown","ArrowRight"].includes(e.key)) { e.preventDefault(); tick(1); }
   if (["ArrowUp","ArrowLeft"].includes(e.key)) { e.preventDefault(); tick(-1); }
-  if (e.key === "Enter" || e.key === "a" || e.key === "A" || e.key === "s" || e.key === "S") { e.preventDefault(); pressA(); }
-  if (e.key === "Escape" || e.key === "b" || e.key === "B") { e.preventDefault(); pressB(); }
+  if (["Enter","a","A","s","S"].includes(e.key)) { e.preventDefault(); pressA(); }
+  if (["Escape","b","B"].includes(e.key)) { e.preventDefault(); pressB(); }
 });
-
 async function boot() {
   try {
     const res = await fetch("last_feed.json", { cache: "no-store" });
@@ -435,20 +437,16 @@ async function boot() {
       FEED.summary = ascii(`${r.from || ""} -> ${r.to || ""}`.trim() || FEED.summary);
       FEED.turns = (r.instructions || []).map(ascii);
       FEED.placesByCat = {};
-      const cats = data.categories || {};
       for (const k of CATEGORIES) {
-        FEED.placesByCat[k] = (cats[k] || []).map(p => ascii(p.name));
+        FEED.placesByCat[k] = ((data.categories || {})[k] || []).map(p => ascii(p.name));
       }
       FEED.places = (data.selected_places || []).map(p => ascii(p.name));
-      if (data.selected && CATEGORIES.includes(data.selected)) {
-        state.cat = CATEGORIES.indexOf(data.selected);
-      }
+      if (data.selected && CATEGORIES.includes(data.selected)) state.cat = CATEGORIES.indexOf(data.selected);
     }
-  } catch (e) { /* keep fallback */ }
+  } catch (_) {}
   go("splash");
-  stage.focus();
+  lcd.focus();
 }
-
 boot();
 </script>
 </body>
